@@ -1,0 +1,95 @@
+
+/**
+ * @fileoverview Firestore Security Rules for the Executive Hub application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model for personal data.
+ * Each user has full control over their own data, and no access to other users' data.
+ * A single, clear rule is applied to each user-owned subcollection (`accounts`, `contacts`, etc.)
+ * granting full read/write access to the owner. This is a secure and simple approach.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    /**
+     * Controls access to user profile documents. Users can only access their own profile.
+     */
+    match /users/{userId} {
+      allow create: if isSignedIn() && isOwner(userId);
+      allow get, update, delete: if isOwner(userId);
+      allow list: if false; // Disallow listing all users for privacy
+    }
+
+    /**
+     * Controls access to the entire 'accounts' subcollection for a user.
+     * The owner has full read (get, list) and write (create, update, delete) access.
+     */
+    match /users/{userId}/accounts/{document=**} {
+      allow read, write: if isOwner(userId);
+    }
+
+    /**
+     * Controls access to the entire 'expenses' subcollection for a user.
+     */
+    match /users/{userId}/expenses/{document=**} {
+      allow read, write: if isOwner(userId);
+    }
+
+    /**
+     * Controls access to the entire 'contacts' subcollection for a user.
+     */
+    match /users/{userId}/contacts/{document=**} {
+      allow read, write: if isOwner(userId);
+    }
+
+    /**
+     * Controls access to the entire 'calendarEvents' subcollection for a user.
+     */
+    match /users/{userId}/calendarEvents/{document=**} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    /**
+     * Controls access to the entire 'tasks' subcollection for a user.
+     */
+    match /users/{userId}/tasks/{document=**} {
+      allow read, write: if isOwner(userId);
+    }
+
+    /**
+     * Controls access to the entire 'lynxInsights' subcollection for a user.
+     */
+    match /users/{userId}/lynxInsights/{document=**} {
+      allow read, write: if isOwner(userId);
+    }
+
+    /**
+     * Controls access to the entire 'reports' subcollection for a user.
+     */
+    match /users/{userId}/reports/{document=**} {
+      allow read, write: if isOwner(userId);
+    }
+
+    /**
+     * Controls access to dashboard card documents.
+     * These are considered public for this prototype.
+     */
+    match /dashboardCards/{dashboardCardId} {
+      allow get, list: if true;
+      allow create, update, delete: if false; // Writes should be handled by a backend function
+    }
+  }
+}
+
+    
+
+    

@@ -1,0 +1,607 @@
+
+{
+  "entities": {
+    "Task": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Task",
+      "type": "object",
+      "description": "Represents a task or to-do item.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the task."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Task)"
+        },
+        "accountId": {
+          "type": "string",
+          "description": "Reference to Account. (Relationship: Account 1:N Task)"
+        },
+        "title": {
+          "type": "string",
+          "description": "The title or description of the task."
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Whether the task is completed or not."
+        },
+        "dueDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the task is due."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes for the task."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the task was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the task was last updated."
+        }
+      },
+      "required": ["id", "userId", "title", "completed"]
+    },
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user profile within the Executive Hub application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user profile."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the user."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the user.",
+          "format": "email"
+        },
+        "title": {
+          "type": "string",
+          "description": "The job title of the user."
+        },
+        "company": {
+          "type": "string",
+          "description": "The company the user works for."
+        },
+        "dashboardCardIds": {
+          "type": "array",
+          "description": "References to DashboardCard entities. (Relationship: UserProfile 1:N DashboardCard)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "firstName",
+        "lastName",
+        "email"
+      ]
+    },
+    "Expense": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Expense",
+      "type": "object",
+      "description": "Represents an expense record.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the expense record."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Expense)"
+        },
+        "date": {
+          "type": "string",
+          "description": "The date of the expense.",
+          "format": "date-time"
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount of the expense."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the expense."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category of the expense (e.g., Travel, Food, Lodging)."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "date",
+        "amount",
+        "description",
+        "category"
+      ]
+    },
+    "Contact": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Contact",
+      "type": "object",
+      "description": "Represents a contact in the rolodex.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the contact."
+        },
+        "accountId": {
+          "type": "string",
+          "description": "Reference to Account. (Relationship: Account 1:N Contact)"
+        },
+        "avatarId": {
+            "type": "string",
+            "description": "Identifier for the contact's avatar image."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the contact."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the contact."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the contact.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "The phone number of the contact."
+        },
+        "address": {
+          "type": "string",
+          "description": "The address of the contact."
+        },
+        "company": {
+          "type": "string",
+          "description": "The company the contact works for."
+        },
+        "title": {
+            "type": "string",
+            "description": "The job title of the contact."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Any notes about the contact."
+        }
+      },
+      "required": [
+        "id",
+        "firstName",
+        "lastName",
+        "email",
+        "phone",
+        "address",
+        "title",
+        "avatarId"
+      ]
+    },
+    "CalendarEvent": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CalendarEvent",
+      "type": "object",
+      "description": "Represents an event from the integrated calendar.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the calendar event."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N CalendarEvent)"
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the event."
+        },
+        "startTime": {
+          "type": "string",
+          "description": "The start time of the event.",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "The end time of the event.",
+          "format": "date-time"
+        },
+        "location": {
+          "type": "string",
+          "description": "The location of the event."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the event."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "title",
+        "startTime",
+        "endTime"
+      ]
+    },
+    "LynxInsight": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "LynxInsight",
+      "type": "object",
+      "description": "Represents a business insight from the LYNX AI repository.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the LYNX insight."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N LynxInsight)"
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the insight."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the insight."
+        },
+        "dateGenerated": {
+          "type": "string",
+          "description": "The date and time the insight was generated.",
+          "format": "date-time"
+        },
+        "source": {
+          "type": "string",
+          "description": "The source of the insight (e.g., LYNX AI)."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "title",
+        "description",
+        "dateGenerated",
+        "source"
+      ]
+    },
+    "Report": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Report",
+      "type": "object",
+      "description": "Represents a BI report.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the report."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Report)"
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the report."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the report."
+        },
+        "dateGenerated": {
+          "type": "string",
+          "description": "The date and time the report was generated.",
+          "format": "date-time"
+        },
+        "data": {
+          "type": "string",
+          "description": "The actual report data (e.g., JSON, CSV)."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "title",
+        "description",
+        "dateGenerated",
+        "data"
+      ]
+    },
+    "DashboardCard": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "DashboardCard",
+      "type": "object",
+      "description": "Represents a card on the personalized dashboard.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the dashboard card."
+        },
+        "cardType": {
+          "type": "string",
+          "description": "The type of card (e.g., ExpenseSummary, Calendar, LYNXInsight)."
+        },
+        "configuration": {
+          "type": "string",
+          "description": "Configuration settings for the card (e.g., JSON)."
+        }
+      },
+      "required": [
+        "id",
+        "cardType",
+        "configuration"
+      ]
+    },
+    "Account": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Account",
+      "type": "object",
+      "description": "Represents a client account.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the account."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Account)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the account."
+        },
+        "industry": {
+          "type": "string",
+          "description": "The industry the account belongs to."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Ongoing", "Established", "Potential", "Lost"],
+          "description": "The current status of the account."
+        },
+        "opportunityType": {
+          "type": "string",
+          "enum": ["Sell-side", "Referral", "Other"],
+          "description": "The type of opportunity for the account."
+        },
+        "calculationType": {
+          "type": "string",
+          "enum": ["Sales", "Monthly Fee", "Equity"],
+          "description": "The method for calculating the opportunity value."
+        },
+        "opportunityValue": {
+          "type": "number",
+          "description": "The monetary value of the opportunity for 'Sales' type."
+        },
+        "monthlyFee": {
+            "type": "number",
+            "description": "The monthly recurring fee for 'Monthly Fee' type."
+        },
+        "contractTerm": {
+            "type": "number",
+            "description": "The term of the contract in months for 'Monthly Fee' type."
+        },
+        "equityPercentage": {
+            "type": "number",
+            "description": "The percentage of equity for 'Equity' type."
+        },
+        "companyValuation": {
+            "type": "number",
+            "description": "The valuation of the company for 'Equity' type."
+        },
+        "confidenceRate": {
+            "type": "number",
+            "description": "The confidence rate of closing the deal, as a percentage."
+        },
+        "commission": {
+            "type": "number",
+            "description": "The commission percentage for the deal."
+        }
+      },
+      "required": ["id", "userId", "name", "status", "opportunityType", "calculationType", "confidenceRate", "commission"]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous",
+      "google.com"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profiles.  The 'userId' parameter is used for path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/tasks/{taskId}",
+        "definition": {
+          "entityName": "Task",
+          "schema": {
+            "$ref": "#/backend/entities/Task"
+          },
+          "description": "Stores tasks for each user. The 'userId' parameter is used for path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "taskId",
+              "description": "The unique identifier of the task."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/accounts/{accountId}",
+        "definition": {
+          "entityName": "Account",
+          "schema": {
+            "$ref": "#/backend/entities/Account"
+          },
+          "description": "Stores accounts for each user. The 'userId' parameter is used for path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "accountId",
+              "description": "The unique identifier of the account."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/expenses/{expenseId}",
+        "definition": {
+          "entityName": "Expense",
+          "schema": {
+            "$ref": "#/backend/entities/Expense"
+          },
+          "description": "Stores expense records for each user. The 'userId' parameter is used for path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "expenseId",
+              "description": "The unique identifier of the expense."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/contacts/{contactId}",
+        "definition": {
+          "entityName": "Contact",
+          "schema": {
+            "$ref": "#/backend/entities/Contact"
+          },
+          "description": "Stores contacts for each user. The 'userId' parameter is used for path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "contactId",
+              "description": "The unique identifier of the contact."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/calendarEvents/{calendarEventId}",
+        "definition": {
+          "entityName": "CalendarEvent",
+          "schema": {
+            "$ref": "#/backend/entities/CalendarEvent"
+          },
+          "description": "Stores calendar events for each user. The 'userId' parameter is used for path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "calendarEventId",
+              "description": "The unique identifier of the calendar event."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/lynxInsights/{lynxInsightId}",
+        "definition": {
+          "entityName": "LynxInsight",
+          "schema": {
+            "$ref": "#/backend/entities/LynxInsight"
+          },
+          "description": "Stores LYNX AI insights for each user. The 'userId' parameter is used for path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "lynxInsightId",
+              "description": "The unique identifier of the LynxInsight."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/reports/{reportId}",
+        "definition": {
+          "entityName": "Report",
+          "schema": {
+            "$ref": "#/backend/entities/Report"
+          },
+          "description": "Stores BI reports for each user. The 'userId' parameter is used for path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "reportId",
+              "description": "The unique identifier of the report."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/dashboardCards/{dashboardCardId}",
+        "definition": {
+          "entityName": "DashboardCard",
+          "schema": {
+            "$ref": "#/backend/entities/DashboardCard"
+          },
+          "description": "Stores dashboard card configurations.  These are globally accessible, but referenced by user profiles.",
+          "params": [
+            {
+              "name": "dashboardCardId",
+              "description": "The unique identifier of the dashboard card."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to provide a secure and scalable backend for the Executive Hub application. It follows the principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters).\n\n**Authorization Independence:** Achieved through denormalization. For example, the `Expense`, `CalendarEvent`, `LynxInsight`, `Report`, and `Account` collections are subcollections of the `/users/{userId}` collection. The `userId` is inherently available within each document, thus avoiding the need for `get()` calls to a parent document for authorization.\n\n**Structural Segregation:** Each top-level collection (e.g., `/users/{userId}/expenses`) maintains a homogeneous security posture.  This means that all documents within a single collection share the same access rules.\n\n**Access Modeling:**  Path-based ownership (`/users/{userId}/expenses/{expenseId}`) is the primary access control mechanism for private user data. This allows simple security rules based on `request.auth.uid == userId`.\n\n**QAPs Support:** The structure supports secure `list` operations through the use of path-based ownership. Rules can easily filter lists to only return data owned by the authenticated user without relying on filtering the data itself.  For example, listing expenses is performed on `/users/{userId}/expenses`, so the rule `request.auth.uid == userId` ensures that only the current user's expenses are returned.\n\n**Justification for Structure Choices:**\n\n*   `/users/{userId}`: This collection stores user profiles.  It's the root for user-specific data.\n*   `/users/{userId}/accounts/{accountId}`: Stores client accounts for each user, with clear ownership.\n*   `/users/{userId}/expenses/{expenseId}`: Stores expense records for each user. The `userId` in the path makes ownership clear.\n*   `/users/{userId}/contacts/{contactId}`: Stores user contacts. The `userId` ensures ownership and isolation.\n*   `/users/{userId}/calendarEvents/{calendarEventId}`: Stores calendar events for each user, with similar ownership benefits.\n\n*   `/users/{userId}/tasks/{taskId}`: Stores tasks for each user, with clear ownership.\n*   `/users/{userId}/lynxInsights/{lynxInsightId}`: Stores LYNX AI insights specific to a user.\n*   `/users/{userId}/reports/{reportId}`: Stores BI reports generated for each user.\n*   `/dashboardCards/{dashboardCardId}`: Stores dashboard card configurations. These are global, not user specific, but a `UserProfile` references them via `dashboardCardIds`.\n\nThis structure promotes secure, scalable, and maintainable data management within the Executive Hub application."
+  }
+}

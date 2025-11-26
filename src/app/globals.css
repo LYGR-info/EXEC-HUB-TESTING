@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 96%;
+    /* Alabaster */
+    --foreground: 216 67% 11%;
+    /* Navy */
+    --card: 0 0% 100%;
+    --card-foreground: 216 67% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 216 67% 11%;
+    --primary: 45 59% 51%;
+    /* Gold */
+    --primary-foreground: 216 67% 11%;
+    /* Navy */
+    --secondary: 0 0% 90%;
+    --secondary-foreground: 216 67% 11%;
+    --muted: 0 0% 90%;
+    --muted-foreground: 0 0% 50%;
+    /* Sterling */
+    --accent: 45 59% 51%;
+    /* Gold */
+    --accent-foreground: 216 67% 11%;
+    /* Navy */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 80%;
+    --input: 0 0% 80%;
+    --ring: 45 59% 51%;
+    /* Gold */
+    --chart-1: 45 59% 51%;
+    /* Gold */
+    --chart-2: 216 67% 11%;
+    /* Navy */
+    --chart-3: 0 0% 50%;
+    /* Sterling */
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+    --sidebar-background: 216 67% 11%;
+    /* Navy */
+    --sidebar-foreground: 0 0% 96%;
+    /* Alabaster */
+    --sidebar-primary: 45 59% 51%;
+    /* Gold */
+    --sidebar-primary-foreground: 216 67% 11%;
+    /* Navy */
+    --sidebar-accent: 0 0% 6%;
+    /* Obsidian */
+    --sidebar-accent-foreground: 0 0% 96%;
+    /* Alabaster */
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 45 59% 51%;
+    /* Gold */
+  }
+
+  .dark {
+    --background: 0 0% 6%;
+    /* Obsidian */
+    --foreground: 0 0% 96%;
+    /* Alabaster */
+    --card: 216 67% 11%;
+    /* Navy */
+    --card-foreground: 0 0% 96%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 45 59% 51%;
+    /* Gold */
+    --primary-foreground: 216 67% 11%;
+    --secondary: 216 67% 30%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 216 67% 15%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 45 59% 51%;
+    /* Gold */
+    --accent-foreground: 216 67% 11%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 216 67% 40%;
+    --input: 216 67% 40%;
+    --ring: 45 59% 51%;
+    /* Gold */
+    --chart-1: 45 59% 51%;
+    /* Gold */
+    --chart-2: 0 0% 96%;
+    /* Alabaster */
+    --chart-3: 0 0% 50%;
+    /* Sterling */
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --sidebar-background: 0 0% 6%;
+    /* Obsidian */
+    --sidebar-foreground: 0 0% 96%;
+    /* Alabaster */
+    --sidebar-primary: 45 59% 51%;
+    /* Gold */
+    --sidebar-primary-foreground: 216 67% 11%;
+    /* Navy */
+    --sidebar-accent: 216 67% 11%;
+    /* Navy */
+    --sidebar-accent-foreground: 0 0% 96%;
+    /* Alabaster */
+    --sidebar-border: 216 67% 20%;
+    --sidebar-ring: 45 59% 51%;
+    /* Gold */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

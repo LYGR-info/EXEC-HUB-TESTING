@@ -1,0 +1,76 @@
+{
+  "placeholderImages": [
+    {
+      "id": "avatar-1",
+      "description": "Avatar of Alice Johnson",
+      "imageUrl": "https://images.unsplash.com/photo-1579503841516-e0bd7fca5faa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHx3b21hbiUyMGZhY2V8ZW58MHx8fHwxNzYxODA2Njc3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "woman face"
+    },
+    {
+      "id": "avatar-2",
+      "description": "Avatar of Bob Williams",
+      "imageUrl": "https://images.unsplash.com/photo-1583692331507-fc0bd348695d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxtYW4lMjBmYWNlfGVufDB8fHx8MTc2MTgxNzM3Nnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "man face"
+    },
+    {
+      "id": "avatar-3",
+      "description": "Avatar of Charlie Brown",
+      "imageUrl": "https://images.unsplash.com/photo-1599566147214-ce487862ea4f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxwZXJzb24lMjBmYWNlfGVufDB8fHx8MTc2MTg1MzQyNHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person face"
+    },
+    {
+      "id": "avatar-4",
+      "description": "Avatar of Diana Prince",
+      "imageUrl": "https://images.unsplash.com/photo-1525786210598-d527194d3e9a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHx3b21hbiUyMHNtaWxlfGVufDB8fHx8MTc2MTg1NTU2MXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "woman smile"
+    },
+    {
+      "id": "avatar-5",
+      "description": "Avatar of Ethan Hunt",
+      "imageUrl": "https://images.unsplash.com/photo-1560250097-0b93528c311a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxtYW4lMjBwb3J0cmFpdHxlbnwwfHx8fDE3NjE4ODE5NTd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "man portrait"
+    },
+    {
+      "id": "avatar-6",
+      "description": "Avatar for user menu",
+      "imageUrl": "https://images.unsplash.com/photo-1556157382-97eda2d62296?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxwcm9mZXNzaW9uYWwlMjBtYW58ZW58MHx8fHwxNzYxODI4OTY1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "professional man"
+    },
+    {
+      "id": "logo-1",
+      "description": "QuantumLeap Tech Logo",
+      "imageUrl": "https://images.unsplash.com/photo-1760037028517-e5cc6e3ebd3e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHx0ZWNoJTIwbG9nb3xlbnwwfHx8fDE3NjE4OTE0NjV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "tech logo"
+    },
+    {
+      "id": "logo-2",
+      "description": "Stellar Solutions Logo",
+      "imageUrl": "https://images.unsplash.com/photo-1761383224726-67e375a6fd88?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxzb2x1dGlvbnMlMjBsb2dvfGVufDB8fHx8MTc2MTkwMDI4Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "solutions logo"
+    },
+    {
+      "id": "logo-3",
+      "description": "BioGen Innovations Logo",
+      "imageUrl": "https://images.unsplash.com/photo-1658321467213-3af4efda4904?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzY2llbmNlJTIwbG9nb3xlbnwwfHx8fDE3NjE4OTE1NjV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "science logo"
+    },
+    {
+      "id": "logo-4",
+      "description": "FinTrust Capital Logo",
+      "imageUrl": "https://images.unsplash.com/photo-1679676057052-69f07449ea8e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxmaW5hbmNlJTIwbG9nb3xlbnwwfHx8fDE3NjE4NjM5OTZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "finance logo"
+    },
+    {
+      "id": "logo-5",
+      "description": "GreenScape Energy Logo",
+      "imageUrl": "https://images.unsplash.com/photo-1761426079132-c2c9978b9514?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxlbmVyZ3klMjBsb2dvfGVufDB8fHx8MTc2MTg3MjUwMnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "energy logo"
+    },
+    {
+      "id": "logo-6",
+      "description": "DataWeave Analytics Logo",
+      "imageUrl": "https://images.unsplash.com/photo-1758626104169-6835c0bd03e3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxkYXRhJTIwbG9nb3xlbnwwfHx8fDE3NjE4MjAzODN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "data logo"
+    }
+  ]
+}
