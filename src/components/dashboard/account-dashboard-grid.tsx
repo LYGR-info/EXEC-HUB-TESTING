@@ -21,8 +21,11 @@ export default function AccountDashboardGrid({ accountId }: { accountId: string 
     accountDashboardCards
   );
 
-   const visibleCards = useMemo(
-    () => storedCards.filter(card => card.visible),
+  const visibleCards = useMemo(
+    () => {
+      const validIds = new Set(accountDashboardCards.map(c => c.id));
+      return storedCards.filter(card => card.visible && validIds.has(card.id));
+    },
     [storedCards]
   );
 

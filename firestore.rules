@@ -30,53 +30,53 @@ service cloud.firestore {
     }
 
     /**
-     * Controls access to the entire 'accounts' subcollection for a user.
-     * The owner has full read (get, list) and write (create, update, delete) access.
+     * Controls access to the entire 'accounts' global collection.
+     * Any signed-in user has full read and write access.
      */
-    match /users/{userId}/accounts/{document=**} {
-      allow read, write: if isOwner(userId);
+    match /accounts/{document=**} {
+      allow read, write: if isSignedIn();
     }
 
     /**
-     * Controls access to the entire 'expenses' subcollection for a user.
+     * Controls access to the entire 'expenses' global collection.
      */
-    match /users/{userId}/expenses/{document=**} {
-      allow read, write: if isOwner(userId);
+    match /expenses/{document=**} {
+      allow read, write: if isSignedIn();
     }
 
     /**
-     * Controls access to the entire 'contacts' subcollection for a user.
+     * Controls access to the entire 'contacts' global collection.
      */
-    match /users/{userId}/contacts/{document=**} {
-      allow read, write: if isOwner(userId);
+    match /contacts/{document=**} {
+      allow read, write: if isSignedIn();
     }
 
     /**
-     * Controls access to the entire 'calendarEvents' subcollection for a user.
+     * Controls access to the entire 'calendarEvents' global collection.
      */
-    match /users/{userId}/calendarEvents/{document=**} {
-      allow read, write: if isOwner(userId);
+    match /calendarEvents/{document=**} {
+      allow read, write: if isSignedIn();
     }
     
     /**
-     * Controls access to the entire 'tasks' subcollection for a user.
+     * Controls access to the entire 'tasks' global collection.
      */
-    match /users/{userId}/tasks/{document=**} {
-      allow read, write: if isOwner(userId);
+    match /tasks/{document=**} {
+      allow read, write: if isSignedIn();
     }
 
     /**
-     * Controls access to the entire 'lynxInsights' subcollection for a user.
+     * Controls access to the entire 'lynxInsights' global collection.
      */
-    match /users/{userId}/lynxInsights/{document=**} {
-      allow read, write: if isOwner(userId);
+    match /lynxInsights/{document=**} {
+      allow read, write: if isSignedIn();
     }
 
     /**
-     * Controls access to the entire 'reports' subcollection for a user.
+     * Controls access to the entire 'reports' global collection.
      */
-    match /users/{userId}/reports/{document=**} {
-      allow read, write: if isOwner(userId);
+    match /reports/{document=**} {
+      allow read, write: if isSignedIn();
     }
 
     /**

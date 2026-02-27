@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/select';
 import { useState } from 'react';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import {
   Dialog,
   DialogContent,
@@ -45,6 +45,16 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const statusColors: Record<AccountStatus, string> = {
   Ongoing:
@@ -66,17 +76,18 @@ export default function AccountsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newAccountName, setNewAccountName] = useState('');
   const [newAccountIndustry, setNewAccountIndustry] = useState('');
+  const [accountToDelete, setAccountToDelete] = useState<Account | null>(null);
 
   const accountsCollection = useMemoFirebase(() => {
     if (!user || !firestore) return null;
-    return collection(firestore, `users/${user.uid}/accounts`);
+    return collection(firestore, `accounts`);
   }, [user, firestore]);
 
   const { data: accounts, isLoading } = useCollection<Account>(accountsCollection);
 
   const handleStatusChange = async (accountId: string, newStatus: AccountStatus) => {
     if (!firestore || !user) return;
-    const accountRef = doc(firestore, `users/${user.uid}/accounts/${accountId}`);
+    const accountRef = doc(firestore, `accounts/${accountId}`);
     try {
       await updateDoc(accountRef, { status: newStatus });
       toast({ title: 'Status updated' });
@@ -111,6 +122,19 @@ export default function AccountsPage() {
       console.error("Error creating account:", error);
       toast({ title: 'Error creating account', variant: 'destructive' });
     }
+  };
+
+  const handleDeleteAccount = async (accountId: string) => {
+    if (!firestore || !user) return;
+    const accountRef = doc(firestore, `accounts/${accountId}`);
+    try {
+      await deleteDoc(accountRef);
+      toast({ title: 'Account deleted successfully' });
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      toast({ title: 'Error deleting account', variant: 'destructive' });
+    }
+    setAccountToDelete(null);
   };
 
   return (
@@ -183,6 +207,7 @@ export default function AccountsPage() {
                 <TableHead className="hidden w-[64px] sm:table-cell">
                   <span className="sr-only">Logo</span>
                 </TableHead>
+
                 <TableHead>Account Name</TableHead>
                 <TableHead>Industry</TableHead>
                 <TableHead>Status</TableHead>
@@ -210,6 +235,7 @@ export default function AccountsPage() {
                         </div>
                       )}
                     </TableCell>
+
                     <TableCell className="font-medium">
                       <Link href={`/accounts/${account.id}`} className="hover:underline">
                         {account.name}
@@ -237,8 +263,14 @@ export default function AccountsPage() {
                       </Select>
                     </TableCell>
                     <TableCell>
-                      <Button asChild variant="outline" size="sm">
-                        <Link href={`/accounts/${account.id}`}>View</Link>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={() => setAccountToDelete(account)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -255,6 +287,24 @@ export default function AccountsPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!accountToDelete} onOpenChange={(open) => !open && setAccountToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the account
+              &quot;{accountToDelete?.name}&quot; and remove your data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => accountToDelete && handleDeleteAccount(accountToDelete.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

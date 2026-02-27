@@ -2,6 +2,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { MoreHorizontal, PlusCircle, Upload } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -156,7 +157,7 @@ export default function RolodexPage() {
 
   const contactsCollection = useMemoFirebase(() => {
     if (!user || !firestore) return null;
-    return collection(firestore, `users/${user.uid}/contacts`);
+    return collection(firestore, `contacts`);
   }, [user, firestore]);
 
   const { data: contacts, isLoading: isLoadingContacts } =
@@ -164,7 +165,7 @@ export default function RolodexPage() {
 
   const accountsCollection = useMemoFirebase(() => {
     if (!user || !firestore) return null;
-    return collection(firestore, `users/${user.uid}/accounts`);
+    return collection(firestore, `accounts`);
   }, [user, firestore]);
 
   const { data: accounts, isLoading: isLoadingAccounts } =
@@ -197,7 +198,7 @@ export default function RolodexPage() {
 
   const handleDelete = async (contactId: string) => {
     if (!firestore || !user) return;
-    const contactRef = doc(firestore, `users/${user.uid}/contacts/${contactId}`);
+    const contactRef = doc(firestore, `contacts/${contactId}`);
     try {
       await deleteDoc(contactRef);
       toast({ title: 'Contact deleted successfully' });
@@ -216,15 +217,37 @@ export default function RolodexPage() {
     if (!contactsCollection || !firestore || !user) return;
 
     try {
+      let finalAccountId = data.accountId === 'none' ? '' : data.accountId;
+
+      // Handle "Add new account" selection
+      if (finalAccountId === 'new-account') {
+        const newAccountData = {
+          name: data.company || 'New Account',
+          industry: '',
+          status: 'Potential',
+          logoId: `logo-${Math.floor(Math.random() * 6) + 1}`,
+          opportunityType: 'Other',
+          revenueStreams: [],
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        };
+
+        if (accountsCollection) {
+          const newAccountRef = await addDoc(accountsCollection, newAccountData);
+          finalAccountId = newAccountRef.id;
+          toast({ title: 'New account created' });
+        }
+      }
+
       const payload = {
         ...data,
-        accountId: data.accountId === 'none' ? '' : data.accountId,
+        accountId: finalAccountId,
       };
 
       if (editingContact) {
         const contactRef = doc(
           firestore,
-          `users/${user.uid}/contacts/${editingContact.id}`
+          `contacts/${editingContact.id}`
         );
         await updateDoc(contactRef, {
           ...payload,
@@ -325,7 +348,7 @@ export default function RolodexPage() {
 
       let deletedCount = 0;
       for (const contact of contactsToDelete) {
-        await deleteDoc(doc(firestore, `users/${user?.uid}/contacts/${contact.id}`));
+        await deleteDoc(doc(firestore, `contacts/${contact.id}`));
         deletedCount++;
       }
 
@@ -568,6 +591,9 @@ export default function RolodexPage() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
+                            <SelectItem value="new-account" className="font-semibold text-primary">
+                              + Add new account
+                            </SelectItem>
                             {isLoadingAccounts ? (
                               <SelectItem value="loading" disabled>
                                 Loading accounts...
@@ -673,7 +699,13 @@ export default function RolodexPage() {
                       {contact.company}
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
-                      {account ? account.name : <span className="text-muted-foreground">N/A</span>}
+                      {account ? (
+                        <Link href={`/accounts/${account.id}`} className="hover:underline text-primary">
+                          {account.name}
+                        </Link>
+                      ) : (
+                        <span className="text-muted-foreground">N/A</span>
+                      )}
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
                       {contact.creatorName && (

@@ -9,8 +9,10 @@ import {
   CardFooter,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ListChecks, ArrowUpRight } from 'lucide-react';
+import { ListChecks, ArrowUpRight, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { useLocalStorage } from '@/hooks/use-local-storage';
+import { Account } from '@/lib/data';
 import {
   collection,
   query,
@@ -51,25 +53,41 @@ function TaskSkeleton() {
   );
 }
 
-export default function TaskManagerCard({ accountId }: { accountId: string }) {
+export default function TaskManagerCard({ accountId }: { accountId?: string }) {
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
 
   const tasksQuery = useMemoFirebase(() => {
-    if (!user || !firestore || !accountId) return null;
+    if (!user || !firestore) return null;
+    if (accountId) {
+      return query(
+        collection(firestore, `tasks`),
+        where('accountId', '==', accountId),
+        limit(5)
+      );
+    }
     return query(
-      collection(firestore, `users/${user.uid}/tasks`),
-      where('accountId', '==', accountId),
+      collection(firestore, `tasks`),
       limit(5)
     );
   }, [user, firestore, accountId]);
 
   const { data: tasks, isLoading } = useCollection<Task>(tasksQuery);
 
+  const [lastActivityAccountId] = useLocalStorage('last-activity-account-id', '');
+
+  const accountsQuery = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return collection(firestore, `accounts`);
+  }, [user, firestore]);
+
+  const { data: allAccounts } = useCollection<Account>(accountsQuery);
+  const lastActiveAccount = allAccounts?.find(a => a.id === lastActivityAccountId);
+
   const handleToggleComplete = async (task: Task) => {
     if (!firestore || !user) return;
-    const taskRef = doc(firestore, `users/${user.uid}/tasks/${task.id}`);
+    const taskRef = doc(firestore, `tasks/${task.id}`);
     try {
       await updateDoc(taskRef, {
         completed: !task.completed,
@@ -127,9 +145,9 @@ export default function TaskManagerCard({ accountId }: { accountId: string }) {
                     {task.title}
                   </Label>
                   {task.dueDate && (
-                     <p className="text-xs text-muted-foreground">
-                        Due: {format(task.dueDate.toDate(), 'MMM d, yyyy')}
-                     </p>
+                    <p className="text-xs text-muted-foreground">
+                      Due: {format(task.dueDate.toDate(), 'MMM d, yyyy')}
+                    </p>
                   )}
                 </div>
               </div>
@@ -141,13 +159,21 @@ export default function TaskManagerCard({ accountId }: { accountId: string }) {
           )}
         </div>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex flex-col gap-2">
         <Button asChild variant="outline" className="w-full">
           <Link href={`/tasks?accountId=${accountId}`}>
             Go to Task Manager
             <ArrowUpRight className="ml-2 h-4 w-4" />
           </Link>
         </Button>
+        {lastActivityAccountId && lastActivityAccountId !== accountId && lastActiveAccount && (
+          <Button asChild variant="ghost" size="sm" className="w-full text-xs text-muted-foreground gap-2">
+            <Link href={`/accounts/${lastActivityAccountId}`}>
+              <ArrowLeft className="h-3 w-3" />
+              Jump to {lastActiveAccount.name}
+            </Link>
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );

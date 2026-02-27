@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BookUser, Landmark, Calendar, Building, BarChart3, ListChecks } from 'lucide-react';
+import { Home, BookUser, Landmark, Calendar, Building, BarChart3, ListChecks, Network } from 'lucide-react';
 import {
   SidebarMenu,
   SidebarMenuItem,
@@ -17,14 +17,17 @@ const navLinks = [
   { href: '/accounts', label: 'Accounts', icon: Building, wip: false },
   { href: '/tasks', label: 'Tasks', icon: ListChecks, wip: false },
   { href: '/reports', label: 'BI Reports', icon: BarChart3, wip: true },
+  { href: '/deal-structure', label: 'Deal Grapher', icon: Network, wip: true },
 ];
 
-export default function AppSidebarNav() {
+export default function AppSidebarNav({ showExperimental = false }: { showExperimental?: boolean }) {
   const pathname = usePathname();
+
+  const filteredLinks = navLinks.filter(link => !link.wip || showExperimental);
 
   return (
     <SidebarMenu>
-      {navLinks.map(link => (
+      {filteredLinks.map(link => (
         <SidebarMenuItem key={link.href}>
           <SidebarMenuButton
             asChild

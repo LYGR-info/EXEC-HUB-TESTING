@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import {
   collection,
   addDoc,
@@ -13,6 +14,7 @@ import {
   query,
   where,
   Timestamp,
+  orderBy,
 } from 'firebase/firestore';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,6 +26,7 @@ import {
   useUser,
   useMemoFirebase,
 } from '@/firebase';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 import type { Account } from '@/lib/data';
 import { accounts } from '@/lib/data';
 
@@ -86,7 +89,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { MoreHorizontal, PlusCircle, CalendarIcon } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, CalendarIcon, ArrowLeft } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
@@ -136,6 +139,7 @@ export default function TasksPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [lastActivityAccountId] = useLocalStorage('last-activity-account-id', '');
 
   const router = useRouter();
   const pathname = usePathname();
@@ -149,7 +153,7 @@ export default function TasksPage() {
 
   const tasksCollection = useMemoFirebase(() => {
     if (!user || !firestore) return null;
-    const baseCollection = collection(firestore, `users/${user.uid}/tasks`);
+    const baseCollection = collection(firestore, `tasks`);
     if (accountIdFilter && accountIdFilter !== 'all') {
       return query(baseCollection, where('accountId', '==', accountIdFilter));
     }
@@ -158,8 +162,14 @@ export default function TasksPage() {
 
   const { data: tasks, isLoading: isLoadingTasks } = useCollection<Task>(tasksCollection);
 
-  // Using static accounts for now, as in rolodex
-  const isLoadingAccounts = false; 
+  const accountsCollection = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return query(collection(firestore, `accounts`), orderBy('name'));
+  }, [user, firestore]);
+
+  const { data: fetchedAccounts, isLoading: isLoadingAccounts } = useCollection<Account>(accountsCollection);
+  const accounts = fetchedAccounts || [];
+  const lastActiveAccount = accounts?.find(a => a.id === lastActivityAccountId);
 
   useEffect(() => {
     if (isDialogOpen) {
@@ -191,7 +201,7 @@ export default function TasksPage() {
 
   const handleDelete = async (taskId: string) => {
     if (!firestore || !user) return;
-    const taskRef = doc(firestore, `users/${user.uid}/tasks/${taskId}`);
+    const taskRef = doc(firestore, `tasks/${taskId}`);
     try {
       await deleteDoc(taskRef);
       toast({ title: 'Task deleted successfully' });
@@ -205,21 +215,21 @@ export default function TasksPage() {
     }
     setTaskToDelete(null);
   };
-  
+
   const handleToggleComplete = async (task: Task) => {
-    if(!firestore || !user) return;
-    const taskRef = doc(firestore, `users/${user.uid}/tasks/${task.id}`);
+    if (!firestore || !user) return;
+    const taskRef = doc(firestore, `tasks/${task.id}`);
     try {
-        await updateDoc(taskRef, { completed: !task.completed, updatedAt: serverTimestamp() });
-    } catch(error: any) {
-        console.error('Error updating task status', error);
-        toast({ title: 'Error updating task', description: 'Could not update task status.', variant: 'destructive' });
+      await updateDoc(taskRef, { completed: !task.completed, updatedAt: serverTimestamp() });
+    } catch (error: any) {
+      console.error('Error updating task status', error);
+      toast({ title: 'Error updating task', description: 'Could not update task status.', variant: 'destructive' });
     }
   }
 
   const onSubmit = async (data: TaskFormValues) => {
     if (!firestore || !user) return;
-    const collectionRef = collection(firestore, `users/${user.uid}/tasks`);
+    const collectionRef = collection(firestore, `tasks`);
 
     try {
       const payload: Partial<Omit<Task, 'id'>> & { title: string, updatedAt: any, dueDate?: Timestamp | undefined } = {
@@ -236,7 +246,7 @@ export default function TasksPage() {
 
 
       if (editingTask) {
-        const taskRef = doc(firestore, `users/${user.uid}/tasks/${editingTask.id}`);
+        const taskRef = doc(firestore, `tasks/${editingTask.id}`);
         await updateDoc(taskRef, payload);
         toast({ title: 'Task updated successfully' });
       } else {
@@ -262,9 +272,9 @@ export default function TasksPage() {
   const handleAccountFilterChange = (accountId: string) => {
     const params = new URLSearchParams(searchParams);
     if (accountId === 'all') {
-        params.delete('accountId');
+      params.delete('accountId');
     } else {
-        params.set('accountId', accountId);
+      params.set('accountId', accountId);
     }
     router.push(`${pathname}?${params.toString()}`);
   }
@@ -280,139 +290,149 @@ export default function TasksPage() {
         description={filterDescription}
       >
         <div className="flex items-center gap-2">
-            <Select value={accountIdFilter || 'all'} onValueChange={handleAccountFilterChange}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by account" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Accounts</SelectItem>
-                {accounts.map(account => (
-                    <SelectItem key={account.id} value={account.id}>{account.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Select value={accountIdFilter || 'all'} onValueChange={handleAccountFilterChange}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Filter by account" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Accounts</SelectItem>
+              {accounts.map(account => (
+                <SelectItem key={account.id} value={account.id}>{account.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {lastActiveAccount && (
+            <Button asChild variant="outline" className="gap-2">
+              <Link href={`/accounts/${lastActivityAccountId}`}>
+                <ArrowLeft className="h-4 w-4" />
+                Back to {lastActiveAccount.name}
+              </Link>
+            </Button>
+          )}
+
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-                <Button onClick={handleAddNew}>
+              <Button onClick={handleAddNew}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add New Task
-                </Button>
+              </Button>
             </DialogTrigger>
             <DialogContent>
-                <DialogHeader>
+              <DialogHeader>
                 <DialogTitle>{editingTask ? 'Edit Task' : 'Add New Task'}</DialogTitle>
-                </DialogHeader>
-                <Form {...form}>
+              </DialogHeader>
+              <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    <FormField
+                  <FormField
                     control={form.control}
                     name="title"
                     render={({ field }) => (
-                        <FormItem>
+                      <FormItem>
                         <FormLabel>Task</FormLabel>
                         <FormControl>
-                            <Input placeholder="e.g., Follow up with QuantumLeap" {...field} />
+                          <Input placeholder="e.g., Follow up with QuantumLeap" {...field} />
                         </FormControl>
                         <FormMessage />
-                        </FormItem>
+                      </FormItem>
                     )}
-                    />
-                    <FormField
+                  />
+                  <FormField
                     control={form.control}
                     name="dueDate"
                     render={({ field }) => (
-                        <FormItem className="flex flex-col">
+                      <FormItem className="flex flex-col">
                         <FormLabel>Due date</FormLabel>
                         <Popover>
-                            <PopoverTrigger asChild>
+                          <PopoverTrigger asChild>
                             <FormControl>
-                                <Button
+                              <Button
                                 variant={"outline"}
                                 className={cn(
-                                    "w-full pl-3 text-left font-normal",
-                                    !field.value && "text-muted-foreground"
+                                  "w-full pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
                                 )}
-                                >
+                              >
                                 {field.value ? (
-                                    format(field.value, "PPP")
+                                  format(field.value, "PPP")
                                 ) : (
-                                    <span>Pick a date</span>
+                                  <span>Pick a date</span>
                                 )}
                                 <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
+                              </Button>
                             </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
                             <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                disabled={(date) =>
-                                date < new Date(new Date().toDateString()) 
-                                }
-                                initialFocus
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              disabled={(date) =>
+                                date < new Date(new Date().toDateString())
+                              }
+                              initialFocus
                             />
-                            </PopoverContent>
+                          </PopoverContent>
                         </Popover>
                         <FormMessage />
-                        </FormItem>
+                      </FormItem>
                     )}
-                    />
-                    <FormField
+                  />
+                  <FormField
                     control={form.control}
                     name="accountId"
                     render={({ field }) => (
-                        <FormItem>
+                      <FormItem>
                         <FormLabel>Account</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value || 'none'}>
-                            <FormControl>
+                          <FormControl>
                             <SelectTrigger>
-                                <SelectValue placeholder="Assign to an account" />
+                              <SelectValue placeholder="Assign to an account" />
                             </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
+                          </FormControl>
+                          <SelectContent>
                             {isLoadingAccounts ? (
-                                <SelectItem value="loading" disabled>Loading accounts...</SelectItem>
+                              <SelectItem value="loading" disabled>Loading accounts...</SelectItem>
                             ) : (
-                                <>
+                              <>
                                 <SelectItem value="none">No Account</SelectItem>
                                 {accounts?.map(account => (
-                                    <SelectItem key={account.id} value={account.id}>
+                                  <SelectItem key={account.id} value={account.id}>
                                     {account.name}
-                                    </SelectItem>
+                                  </SelectItem>
                                 ))}
-                                </>
+                              </>
                             )}
-                            </SelectContent>
+                          </SelectContent>
                         </Select>
                         <FormMessage />
-                        </FormItem>
+                      </FormItem>
                     )}
-                    />
-                    <FormField
+                  />
+                  <FormField
                     control={form.control}
                     name="notes"
                     render={({ field }) => (
-                        <FormItem>
+                      <FormItem>
                         <FormLabel>Notes</FormLabel>
                         <FormControl>
-                            <Textarea
+                          <Textarea
                             placeholder="Add any relevant notes..."
                             className="resize-none"
                             {...field}
-                            />
+                          />
                         </FormControl>
                         <FormMessage />
-                        </FormItem>
+                      </FormItem>
                     )}
-                    />
-                    <DialogFooter>
+                  />
+                  <DialogFooter>
                     <Button type="submit">Save Task</Button>
-                    </DialogFooter>
+                  </DialogFooter>
                 </form>
-                </Form>
+              </Form>
             </DialogContent>
-            </Dialog>
+          </Dialog>
         </div>
 
       </PageHeader>
@@ -433,76 +453,75 @@ export default function TasksPage() {
               </>
             )}
             {tasks?.map(task => {
-                const account = accounts.find(acc => acc.id === task.accountId);
-                return (
-                    <div key={task.id} className="flex items-center space-x-3 p-3 rounded-md hover:bg-muted/50 transition-colors">
-                        <Checkbox 
-                          id={`task-${task.id}`} 
-                          checked={task.completed}
-                          onCheckedChange={() => handleToggleComplete(task)}
-                        />
-                        <div className="flex-1">
-                            <Label htmlFor={`task-${task.id}`} className={cn("text-sm", task.completed ? 'line-through text-muted-foreground' : '')}>
-                                {task.title}
-                            </Label>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                {account && (
-                                    <p>{account.name}</p>
-                                )}
-                                {account && task.dueDate && <span className='h-1 w-1 rounded-full bg-muted-foreground'></span>}
-                                {task.dueDate && (
-                                    <p>Due: {format(task.dueDate.toDate(), 'MMM d, yyyy')}</p>
-                                )}
-                            </div>
-                        </div>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                            <Button aria-haspopup="true" size="icon" variant="ghost">
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Toggle menu</span>
-                            </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onSelect={() => handleEdit(task)}>Edit</DropdownMenuItem>
-                            <DropdownMenuItem
-                                onSelect={() => setTaskToDelete(task)}
-                                className="text-red-600 focus:text-red-600"
-                            >
-                                Delete
-                            </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+              const account = accounts.find(acc => acc.id === task.accountId);
+              return (
+                <div key={task.id} className="flex items-center space-x-3 p-3 rounded-md hover:bg-muted/50 transition-colors">
+                  <Checkbox
+                    id={`task-${task.id}`}
+                    checked={task.completed}
+                    onCheckedChange={() => handleToggleComplete(task)}
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor={`task-${task.id}`} className={cn("text-sm", task.completed ? 'line-through text-muted-foreground' : '')}>
+                      {task.title}
+                    </Label>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      {account && (
+                        <p>{account.name}</p>
+                      )}
+                      {account && task.dueDate && <span className='h-1 w-1 rounded-full bg-muted-foreground'></span>}
+                      {task.dueDate && (
+                        <p>Due: {format(task.dueDate.toDate(), 'MMM d, yyyy')}</p>
+                      )}
                     </div>
-                )
-            })}
-             {tasks && tasks.length === 0 && !isLoadingTasks && (
-                <div className="py-10 text-center text-muted-foreground">
-                No tasks found. Add your first one!
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button aria-haspopup="true" size="icon" variant="ghost">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Toggle menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem onSelect={() => handleEdit(task)}>Edit</DropdownMenuItem>
+                      <DropdownMenuItem
+                        onSelect={() => setTaskToDelete(task)}
+                        className="text-red-600 focus:text-red-600"
+                      >
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
+              )
+            })}
+            {tasks && tasks.length === 0 && !isLoadingTasks && (
+              <div className="py-10 text-center text-muted-foreground">
+                No tasks found. Add your first one!
+              </div>
             )}
           </div>
         </CardContent>
       </Card>
       <AlertDialog open={!!taskToDelete} onOpenChange={(open) => !open && setTaskToDelete(null)}>
         <AlertDialogContent>
-            <AlertDialogHeader>
+          <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the task
-                &quot;{taskToDelete?.title}&quot;.
+              This action cannot be undone. This will permanently delete the task
+              &quot;{taskToDelete?.title}&quot;.
             </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={() => handleDelete(taskToDelete!.id)}>
-                Confirm
+              Confirm
             </AlertDialogAction>
-            </AlertDialogFooter>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
   );
 }
 
-    

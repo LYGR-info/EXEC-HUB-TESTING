@@ -35,8 +35,13 @@ export type CalendarEvent = {
 
 export type AccountStatus = 'Ongoing' | 'Established' | 'Potential' | 'Lost';
 export type OpportunityType = 'Sell-side' | 'Referral' | 'Other';
-export type CalculationType = "Sale-side" | "Monthly Fee" | "Equity";
+export type CalculationType = "Sale-side" | "Buy-side" | "Monthly Fee" | "Raise";
 
+
+export type CommissionTier = {
+  cap?: number; // Upper limit for this tier (e.g. 1000000). If undefined, it means "everything above".
+  rate: number; // Percentage
+};
 
 export type RevenueStream = {
   id: string;
@@ -44,11 +49,11 @@ export type RevenueStream = {
   opportunityValue?: number;
   monthlyFee?: number;
   contractTerm?: number;
-  equityPercentage?: number;
-  companyValuation?: number;
   confidenceRate: number;
   commission?: number;
   isCommissionApplied?: boolean;
+  name?: string;
+  commissionTiers?: CommissionTier[];
 };
 
 export type ActivityLogType = 'Meeting (online)' | 'Meeting (in person)' | 'Email' | 'Phonecall';
@@ -60,7 +65,12 @@ export interface ActivityLogEvent {
   type: ActivityLogType;
   description?: string;
   contactIds?: string[];
+  rating?: number; // 0-10
+  attachmentUrl?: string;
+  attachmentName?: string;
   createdAt: any;
+  creatorName?: string;
+  creatorId?: string;
 }
 
 export type Account = {
@@ -83,6 +93,19 @@ export type Account = {
   commission?: number;
   createdAt?: any;
   updatedAt?: any;
+  valuations?: Valuation[];
+  notes?: string;
+};
+
+export type ValuationType = "Lower estimate" | "High-end estimate" | "Exact";
+
+export type Valuation = {
+  id: string;
+  amount: number;
+  isEstimate: boolean;
+  estimateType?: ValuationType;
+  history?: { date: string; amount: number }[];
+  createdAt?: any;
 };
 
 export const expenses: Expense[] = [
@@ -156,19 +179,14 @@ export const accounts: Account[] = [
     revenueStreams: [
       {
         id: 'rs-1',
-        type: 'Equity',
-        equityPercentage: 5,
-        companyValuation: 100000000,
+        type: 'Sale-side',
+        opportunityValue: 100000000,
         confidenceRate: 75,
         commission: 10,
+        isCommissionApplied: true,
       }
     ],
-    calculationType: 'Equity',
-    opportunityValue: 0,
-    equityPercentage: 5,
-    companyValuation: 100000000,
-    confidenceRate: 75,
-    commission: 10,
+    // Legacy fields removed
   },
   {
     id: 'acc-2',
@@ -284,3 +302,54 @@ export const accounts: Account[] = [
     commission: 10,
   },
 ];
+
+export type OpportunityTableRow = RevenueStream & {
+  accountId: string;
+  accountName: string;
+};
+
+export const flattenOpportunities = (accounts: Account[]): OpportunityTableRow[] => {
+  return accounts.flatMap(account =>
+    (account.revenueStreams || []).map(stream => ({
+      ...stream,
+      accountId: account.id,
+      accountName: account.name,
+    }))
+  );
+};
+
+export const calculateRevenue = (stream: RevenueStream): number => {
+  const baseValue = (stream.type === 'Monthly Fee')
+    ? (stream.monthlyFee || 0) * (stream.contractTerm || 0)
+    : (stream.opportunityValue || 0);
+
+  if ((stream.type === 'Sale-side' || stream.type === 'Buy-side' || stream.type === 'Raise') && stream.isCommissionApplied) {
+    if (stream.commissionTiers && stream.commissionTiers.length > 0) {
+      let remainingValue = baseValue;
+      let totalCommission = 0;
+      let previousCap = 0;
+
+      for (const tier of stream.commissionTiers) {
+        if (remainingValue <= 0) break;
+        const tierCap = tier.cap ? (tier.cap - previousCap) : remainingValue;
+        const tierAmount = Math.min(remainingValue, tierCap);
+
+        if (tierAmount > 0) {
+          totalCommission += tierAmount * (tier.rate / 100);
+          remainingValue -= tierAmount;
+          previousCap = tier.cap || 0;
+        }
+      }
+      return totalCommission;
+    } else {
+      return baseValue * ((stream.commission || 0) / 100);
+    }
+  }
+
+  return baseValue;
+};
+
+export const calculateWeightedValue = (stream: RevenueStream): number => {
+  const revenue = calculateRevenue(stream);
+  return revenue * (stream.confidenceRate / 100);
+};

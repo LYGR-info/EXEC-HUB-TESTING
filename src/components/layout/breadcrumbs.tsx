@@ -34,7 +34,7 @@ const BreadcrumbSegment = ({
 
   const accountRef = useMemo(() => {
     if (!isAccountId || !user || !firestore) return null;
-    return doc(firestore, `users/${user.uid}/accounts/${segment}`);
+    return doc(firestore, `accounts/${segment}`);
   }, [isAccountId, user, firestore, segment]);
 
   const { data: account, isLoading } = useDoc<Account>(accountRef);

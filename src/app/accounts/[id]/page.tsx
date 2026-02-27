@@ -6,6 +6,10 @@ import {
   Building,
   Save,
   PlusCircle,
+  Calculator,
+  Pencil,
+  Check,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,12 +30,14 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Account, AccountStatus, OpportunityType, RevenueStream } from '@/lib/data';
+import { Account, AccountStatus, OpportunityType, RevenueStream, Valuation } from '@/lib/data';
 import { useDoc, useFirestore, useUser } from '@/firebase';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import RevenueStreamCard from '@/components/accounts/revenue-stream-card';
+import ValuationCard from '@/components/accounts/valuation-card';
 import AccountDashboardGrid from '@/components/dashboard/account-dashboard-grid';
 import ActivityLog from '@/components/accounts/activity-log';
+import ImportNotesDialog from '@/components/accounts/import-notes-dialog';
 
 export default function AccountDetailPage() {
   const params = useParams();
@@ -43,7 +49,7 @@ export default function AccountDetailPage() {
 
   const accountRef = useMemo(() => {
     if (!user || !firestore || !accountId) return null;
-    return doc(firestore, `users/${user.uid}/accounts/${accountId}`);
+    return doc(firestore, `accounts/${accountId}`);
   }, [user, firestore, accountId]);
 
   const { data: account, isLoading } = useDoc<Account>(accountRef);
@@ -53,7 +59,10 @@ export default function AccountDetailPage() {
   const [status, setStatus] = useState<AccountStatus>('Potential');
   const [opportunityType, setOpportunityType] = useState<OpportunityType>('Other');
   const [notes, setNotes] = useState('');
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [revenueStreams, setRevenueStreams] = useState<RevenueStream[]>([]);
+  const [valuations, setValuations] = useState<Valuation[]>([]);
 
   useEffect(() => {
     if (account) {
@@ -61,7 +70,7 @@ export default function AccountDetailPage() {
       setIndustry(account.industry);
       setStatus(account.status);
       setOpportunityType(account.opportunityType);
-      // setNotes(account.notes || ''); // Notes field doesn't exist in Account type yet, assuming it might be added or ignored for now.
+      setNotes(account.notes || '');
 
       // Initialize revenue streams
       if (account.revenueStreams && account.revenueStreams.length > 0) {
@@ -75,16 +84,28 @@ export default function AccountDetailPage() {
             opportunityValue: account.opportunityValue,
             monthlyFee: account.monthlyFee,
             contractTerm: account.contractTerm,
-            equityPercentage: account.equityPercentage,
-            companyValuation: account.companyValuation,
             confidenceRate: account.confidenceRate || 50,
             commission: account.commission,
             isCommissionApplied: (account.commission || 0) > 0,
-          };
+          } as RevenueStream;
           setRevenueStreams([legacyStream]);
         } else {
           setRevenueStreams([]);
         }
+      }
+
+      // Initialize valuations
+      if (account.valuations && account.valuations.length > 0) {
+        setValuations(account.valuations);
+      } else if (account.companyValuation) {
+        // Migration from legacy field
+        setValuations([{
+          id: `val-${Date.now()}`,
+          amount: account.companyValuation,
+          isEstimate: false,
+        }]);
+      } else {
+        setValuations([]);
       }
     }
   }, [account]);
@@ -99,6 +120,8 @@ export default function AccountDetailPage() {
         status,
         opportunityType,
         revenueStreams,
+        valuations,
+        notes,
         updatedAt: serverTimestamp(),
       });
 
@@ -119,6 +142,7 @@ export default function AccountDetailPage() {
   const addRevenueStream = () => {
     const newStream: RevenueStream = {
       id: `rs-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      name: '',
       type: 'Sale-side',
       confidenceRate: 50,
       opportunityValue: 0,
@@ -136,6 +160,23 @@ export default function AccountDetailPage() {
     setRevenueStreams(revenueStreams.filter(s => s.id !== streamId));
   };
 
+  const addValuation = () => {
+    const newValuation: Valuation = {
+      id: `val-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      amount: 0,
+      isEstimate: false,
+    };
+    setValuations([...valuations, newValuation]);
+  };
+
+  const updateValuation = (updatedValuation: Valuation) => {
+    setValuations(valuations.map(v => v.id === updatedValuation.id ? updatedValuation : v));
+  };
+
+  const deleteValuation = (valuationId: string) => {
+    setValuations(valuations.filter(v => v.id !== valuationId));
+  };
+
   if (isLoading) {
     return <div className="p-8">Loading account details...</div>;
   }
@@ -148,12 +189,16 @@ export default function AccountDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{name}</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">{name}</h1>
           <p className="text-muted-foreground">
-            Manage account details and revenue streams.
+            Manage account details and opportunities.
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
+            <FileSpreadsheet className="mr-2 h-4 w-4" />
+            Import from Sheets
+          </Button>
           <Button onClick={handleSave}>
             <Save className="mr-2 h-4 w-4" />
             Save Changes
@@ -229,18 +274,73 @@ export default function AccountDetailPage() {
                 </Select>
               </div>
             </div>
-            {/* Notes field removed as it is not in Account interface */}
+
+            <div className="space-y-2 pt-2 border-t mt-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">Notes</Label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2"
+                  onClick={() => setIsEditingNotes(!isEditingNotes)}
+                >
+                  {isEditingNotes ? (
+                    <>
+                      <Check className="mr-2 h-4 w-4" />
+                      Done
+                    </>
+                  ) : (
+                    <>
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Edit
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {isEditingNotes ? (
+                <Textarea
+                  placeholder="Add account notes here..."
+                  className="min-h-[100px] resize-none"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  autoFocus
+                />
+              ) : (
+                <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md min-h-[60px] whitespace-pre-wrap">
+                  {notes || 'No notes added yet.'}
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Revenue Streams</h2>
-            <Button variant="outline" size="sm" onClick={addRevenueStream}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Stream
-            </Button>
+            <h2 className="text-lg font-semibold">Opportunities</h2>
+            <div className="flex gap-2">
+              {valuations.length === 0 && (
+                <Button size="sm" variant="outline" onClick={addValuation}>
+                  <Calculator className="mr-2 h-4 w-4" />
+                  Add Valuation
+                </Button>
+              )}
+              <Button size="sm" onClick={addRevenueStream}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Opportunity
+              </Button>
+            </div>
           </div>
+
+          {valuations.map(valuation => (
+            <ValuationCard
+              key={valuation.id}
+              valuation={valuation}
+              onUpdate={updateValuation}
+              onDelete={deleteValuation}
+              accountId={accountId}
+            />
+          ))}
 
           {revenueStreams.map(stream => (
             <RevenueStreamCard
@@ -251,9 +351,9 @@ export default function AccountDetailPage() {
             />
           ))}
 
-          {revenueStreams.length === 0 && (
+          {revenueStreams.length === 0 && valuations.length === 0 && (
             <div className="text-center p-8 border border-dashed rounded-lg text-muted-foreground">
-              No revenue streams added. Click "Add Stream" to define revenue.
+              No opportunities added. Click "Add Opportunity" to define revenue.
             </div>
           )}
         </div>
@@ -264,6 +364,18 @@ export default function AccountDetailPage() {
       </div>
 
       <AccountDashboardGrid accountId={accountId} />
+
+      <ImportNotesDialog
+        isOpen={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+        accountId={accountId}
+        accountName={name}
+        currentNotes={notes}
+        onImportComplete={() => {
+          // Re-fetch or manually update local state if needed
+          // Since useDoc is used, it might auto-update if Firestore updates
+        }}
+      />
     </div>
   );
 }

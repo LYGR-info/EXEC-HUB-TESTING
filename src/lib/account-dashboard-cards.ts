@@ -1,5 +1,4 @@
 
-import CalendarCard from '@/components/dashboard/calendar-card';
 import KeyContactsCard from '@/components/dashboard/key-contacts-card';
 import TaskManagerCard from '@/components/dashboard/task-manager-card';
 
@@ -18,13 +17,6 @@ export const accountDashboardCards: DashboardCard[] = [
     component: TaskManagerCard,
     visible: true,
     className: 'lg:col-span-2',
-  },
-  {
-    id: 'calendar',
-    title: 'Account Events',
-    component: CalendarCard,
-    visible: true,
-    className: 'lg:col-span-1',
   },
   {
     id: 'key-contacts',
